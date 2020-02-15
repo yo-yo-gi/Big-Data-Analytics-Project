@@ -32,7 +32,7 @@ Team Details:
   * To determine if wildfires have become more or less frequent over time.
   * To identify what regions are the most and least prone to wildfires.
   * Given the size, location and date, predicting the cause of a fire wildfire.
- # 2. Materials and Methods
+ # 3. Materials and Methods
  ## a. The Dataset ##
   Fire occurrence database 4th edition represents the occurrence of wildfires in the United States from 1992 to 2015. This is the third update of a publication originally generated to support the national Fire Program Analysis (FPA) system. The wildfire records were acquired from the reporting systems of federal, state, and local fire organizations. The following core data elements were required for records to be included in this data publication: discovery date, final fire size, and a point location at least as precise as Public Land Survey System (PLSS) section (1-square mile grid). The data were transformed to conform, when possible, to the data standards of the National Wildfire Coordinating Group (NWCG). Basic error-checking was performed and redundant records were identified and removed, to the degree possible. The resulting product, referred to as the Fire Program Analysis fire-occurrence database (FPA FOD), includes 1.88 million geo-referenced wildfire records, representing a total of 140 million acres burned during the 24-year period.
 
@@ -62,9 +62,9 @@ Some of the important tables, columns and their significance is explained below:
 
 We are planning to use KNN, decision tree and random forest algorithms to process the data and make accurate predictions. Different models will be proposed and tuned, the one with the best results will be included and published in our report.
 
- # 3. Conclusion
+ # 4. Conclusion
 In this project, we will use data visualization techniques to explore data on forest fire occurrence. We will work through identifying variables related to forest fire severity as a premise for discovering why, where and when a forest fire might occur.
- # 4. Related Work
+ # 5. Related Work
  * Analysis of Machine Learning Methods for Wildfire Security Monitoring with an Unmanned Aerial Vehicles
  * Machine learning to predict final fire size at the time of ignition-International Journal of Wildland    Fire(https://www.publish.csiro.au/WF/WF19023)-Dmitriy Alexandrov, Elizaveta Pertseva, Ivan Berman, Igor Pantiukhin, Aleksandr Kapitonov 
  * Data-driven Forest Fire analysis, Jerry Gao, Kshama Shalini, Navit Gaur, Xuan Guan
