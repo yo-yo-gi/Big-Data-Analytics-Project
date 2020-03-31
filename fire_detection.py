@@ -18,6 +18,7 @@ from pyspark.sql.functions import isnan, when, count, col, isnull
 
 
 #Initialize a spark session.
+
 def init_spark():
     spark = SparkSession \
         .builder \
