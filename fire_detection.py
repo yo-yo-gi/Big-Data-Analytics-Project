@@ -28,11 +28,12 @@ def init_spark():
     return spark
 
 def preprocessing():
-spark = init_spark()
-df = spark.read.csv('fires.csv', header='true')
-df = df.select(df.columns[19:29] + df.columns[30:32] + df.columns[34:36])
-df = df.na.drop()
-df = df.withColumn('Duration', ( df['CONT_DOY'] - df['DISCOVERY_DOY'] +1 ) )
+    spark = init_spark()
+    df = spark.read.csv('fires.csv', header='true')
+    df = df.select(df.columns[19:29] + df.columns[30:32] + df.columns[34:35])
+    df = df.na.drop()
+    df = df.withColumn('Duration', ( df['CONT_DOY'] - df['DISCOVERY_DOY'] +1 ) )
+    return df
 
-
-preprocessing()
+preprocessing().count()
+preprocessing().show(10)
