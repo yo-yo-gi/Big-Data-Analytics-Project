@@ -26,13 +26,13 @@ def init_spark():
         .config("spark.some.config.option", "some-value") \
         .getOrCreate()
     return spark
-	
+
 def preprocessing():
-	spark = init_spark()
-	df = spark.read.csv('fires.csv')
-	df = df.select(['_c19','_c20','_c21','_c22','_c23','_c24','_c25','_c26','_c27','_c28','_c29','_c30','_c31','_c34','_c35'])
-	df = df.na.drop()
-	df = df.withColumnRenamed("_c19", "Fire_year").withColumnRenamed("_c20", "Discover_Date").withColumnRenamed("_c21", "Discover_Day").withColumnRenamed("_c22", "Discover_Time").withColumnRenamed("_c23", "Cause").withColumnRenamed("_c24", "Description").withColumnRenamed("_c25", "Containment_Date").withColumnRenamed("_c26", "Containment_Day").withColumnRenamed("_c27", "Containment_Time").withColumnRenamed("_c28", "Fire_size").withColumnRenamed("_c29", "Fire_size_class").withColumnRenamed("_c30", "Latitute").withColumnRenamed("_c31", "Longitude").withColumnRenamed("_c34", "State").withColumnRenamed("_c35", "COUNTY")
-	
-	
+spark = init_spark()
+df = spark.read.csv('fires.csv', header='true')
+df = df.select(df.columns[19:29] + df.columns[30:32] + df.columns[34:36])
+df = df.na.drop()
+df = df.withColumn('Duration', ( df['CONT_DOY'] - df['DISCOVERY_DOY'] +1 ) )
+
+
 preprocessing()
