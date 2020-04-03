@@ -20,6 +20,15 @@ import dask.dataframe as df  # you can use Dask bags or dataframes
 from csv import reader
 from pyspark.sql.functions import isnan, when, count, col, isnull
 
+# Kmeans imports
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+import seaborn as sns; sns.set()
+import csv
+
 
 #Initialize a spark session.
 
@@ -77,3 +86,47 @@ def decisionTree():
 
 decisionTree()
 
+def kmeans():
+	df = pd.read_csv('fires.csv')
+	df.head(10)
+
+	df.dropna(axis=0, how='any', subset=['LATITUDE', 'LONGITUDE'], inplace=True)
+	#finding best k suited for data
+
+	K_clusters = range(1, 10)
+	kmeans = [KMeans(n_clusters=i) for i in K_clusters]
+	Y_axis = df[['LATITUDE']]
+	Y_axis = df[['LONGITUDE']]
+	score = [kmeans[i].fit(Y_axis).score(Y_axis) for i in range(len(kmeans))]
+	plt.plot(K_clusters, score)
+	plt.xlabel('Number of Clusters')
+	plt.ylabel('Score')
+	plt.title('Elbow Curve')
+	plt.show()
+	#for finding clusters using kmeans
+
+	X = df.loc[:, ['OBJECTID', 'LATITUDE', 'LONGITUDE']]
+	X.head(10)
+	kmeans = KMeans(n_clusters=3, init='k-means++')
+	kmeans.fit(X[X.columns[1:3]])
+	X['cluster_label'] = kmeans.fit_predict(X[X.columns[1:3]])
+	centers = kmeans.cluster_centers_
+	labels = kmeans.predict(X[X.columns[1:3]])
+	X.head(10)
+	# for plotting clusters
+
+	X.plot.scatter(x='LATITUDE', y='LONGITUDE', c=labels, s=50, cmap='viridis')
+	plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
+	plt.show()
+	#looking at result after clustering
+
+	df.head(5)
+	X.head(5)
+	X = X[['OBJECTID', 'cluster_label']]
+	X.head(5)
+	#merging back to original dataset
+
+	clustered_data = df.merge(X, left_on='OBJECTID', right_on='OBJECTID')
+	clustered_data.head(5)
+
+	kmeans()
