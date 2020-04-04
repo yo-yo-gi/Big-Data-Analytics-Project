@@ -117,7 +117,7 @@ def kmeans():
 	df = df.withColumn("LONGITUDE", df["LONGITUDE"].cast(FloatType()))
 	df = df.na.drop()
 	X = df.toPandas()
-	kmeans = KMeans(n_clusters=5, init='k-means++')
+	kmeans = KMeans(n_clusters=6, init='k-means++')
 	kmeans.fit(X[X.columns[1:3]])
 	X['cluster_label'] = kmeans.fit_predict(X[X.columns[1:3]])
 	centers = kmeans.cluster_centers_
