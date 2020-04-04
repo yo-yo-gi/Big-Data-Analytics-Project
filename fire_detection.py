@@ -21,6 +21,15 @@ import dask.dataframe as df  # you can use Dask bags or dataframes
 from csv import reader
 from pyspark.sql.functions import isnan, when, count, col, isnull
 
+# Kmeans imports
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+import seaborn as sns; sns.set()
+import csv
+
 
 #Initialize a spark session.
 
@@ -90,3 +99,46 @@ def decisionTree():
 
 decisionTree()
 
+
+def findBestK():
+	spark = init_spark()
+	df = spark.read.csv('fires.csv', header='true')
+	df = df.select('OBJECTID', 'LATITUDE', 'LONGITUDE')
+	df = df.withColumn("LATITUDE", df["LATITUDE"].cast(FloatType()))
+	df = df.withColumn("LONGITUDE", df["LONGITUDE"].cast(FloatType()))
+	df = df.na.drop()
+	K_clusters = range(3, 10)
+	kmeans = [KMeans(n_clusters=i) for i in K_clusters]
+	X_axis = df.select('LATITUDE').toPandas()
+	Y_axis = df.select('LONGITUDE').toPandas()
+	score = [kmeans[i].fit(X_axis).score(Y_axis) for i in range(len(kmeans))]
+	plt.plot(K_clusters, score)
+	plt.xlabel('Number of Clusters')
+	plt.ylabel('Score')
+	plt.title('Elbow Curve')
+	plt.show()
+
+
+findBestK()
+
+
+def kmeans():
+	spark = init_spark()
+	df = spark.read.csv('fires.csv', header='true')
+	df = df.select('OBJECTID', 'LATITUDE', 'LONGITUDE')
+	df = df.withColumn("LATITUDE", df["LATITUDE"].cast(FloatType()))
+	df = df.withColumn("LONGITUDE", df["LONGITUDE"].cast(FloatType()))
+	df = df.na.drop()
+	X = df.toPandas()
+	kmeans = KMeans(n_clusters=6, init='k-means++')
+	kmeans.fit(X[X.columns[1:3]])
+	X['cluster_label'] = kmeans.fit_predict(X[X.columns[1:3]])
+	centers = kmeans.cluster_centers_
+	labels = kmeans.predict(X[X.columns[1:3]])
+	X.plot.scatter(x='LATITUDE', y='LONGITUDE', c=labels, s=50, cmap='viridis')
+	plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
+	plt.show()
+
+
+
+kmeans()
