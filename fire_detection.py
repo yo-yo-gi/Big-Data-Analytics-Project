@@ -13,6 +13,7 @@ from pyspark.ml.feature import OneHotEncoderEstimator, StringIndexer, VectorAsse
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
+import pandas as pd
 # Dask imports
 
 import dask.bag as db
@@ -50,6 +51,18 @@ def preprocessing():
 		stringIndexer = StringIndexer(inputCol = categoricalCol, outputCol = categoricalCol + 'Index')
 		encoder = OneHotEncoderEstimator(inputCols=[stringIndexer.getOutputCol()], outputCols=[categoricalCol + "classVec"])
 		stages += [stringIndexer, encoder]
+		
+	numeric_data = df.select('STAT_CAUSE_CODE','LATITUDE','LONGITUDE','COUNTY','Duration').toPandas()
+	axs = pd.scatter_matrix(numeric_data, figsize=(8, 8));
+	n = len(numeric_data.columns)
+	for i in range(n):
+		v = axs[i, 0]
+		v.yaxis.label.set_rotation(0)
+		v.yaxis.label.set_ha('right')
+		v.set_yticks(())
+		h = axs[n-1, i]
+		h.xaxis.label.set_rotation(90)
+		h.set_xticks(())
 
 	cols = df.columns
 	label_stringIdx = StringIndexer(inputCol = 'FIRE_SIZE', outputCol = 'label').setHandleInvalid("keep")
