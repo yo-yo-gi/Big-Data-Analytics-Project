@@ -20,7 +20,10 @@
 
 
 ## Abstract
+In today’s world, wildfires have become one of the most serious natural calamities affecting millions of people worldwide every year. The ability to predict these disasters would not only help in curbing the impact but also give us a chance to improvise the prediction techniques. In this project, we will be aiming to analyze the data using Apache Spark and scikit-learn library on US wildfires applying different techniques on the dataset and predicting the outcome such as classifying the regions from most affected to the least affected. Secondly in determining how predictable the wildfires are concerning factors such as size and location, also visualization of the data and the factors impacting the outcome to understand the behavior of these natural occurrences. By implementing this project we hope to learn the process of using Big Data and Machine learning techniques.
+ 
 ## 1. INTRODUCTION
+
 ## 2. MATERIALS AND METHODS
 ## 3. RESULTS
 ## 4. CONCLUSIONS
