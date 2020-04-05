@@ -72,3 +72,8 @@ Using the above mentioned tools and algorithms, we are able to obtain the follow
 Our work can be extened towards predction techniques for similar natural calamities, such as earthquakes or storms, which have similar associated data. We faced some challenges while approaching towards the result, such as insufficient or unbalaced data or presence of null values.
 
 In conclusion, we are able to predict some of the aspects that would help in prevention or control of wildfires, using geographcal data and analysis tools/algorithms. 
+
+ ## 5. Related Work
+ * Analysis of Machine Learning Methods for Wildfire Security Monitoring with an Unmanned Aerial Vehicles
+ * Machine learning to predict final fire size at the time of ignition-International Journal of Wildland    Fire(https://www.publish.csiro.au/WF/WF19023)-Dmitriy Alexandrov, Elizaveta Pertseva, Ivan Berman, Igor Pantiukhin, Aleksandr Kapitonov 
+ * Data-driven Forest Fire analysis, Jerry Gao, Kshama Shalini, Navit Gaur, Xuan Guan
