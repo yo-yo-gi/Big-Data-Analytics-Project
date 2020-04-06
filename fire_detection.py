@@ -192,3 +192,69 @@ def kmeans():
 
 
 kmeans()
+
+
+
+# Best K with 'LATITUDE', 'LONGITUDE', "FIRE_SIZE", "Duration"
+
+def findBestK_2():
+	spark = init_spark()
+	df = spark.read.csv('fires.csv', header='true')
+	df = df.withColumn('Duration', (df['CONT_DOY'] - df['DISCOVERY_DOY'] + 1))
+	df = df.select('LATITUDE', 'LONGITUDE', "FIRE_SIZE", "Duration")
+	df = df.withColumn("FIRE_SIZE", df.FIRE_SIZE.cast(IntegerType()))
+	df = df.withColumn("LATITUDE", df.LATITUDE.cast(FloatType()))
+	df = df.withColumn("LONGITUDE", df.LONGITUDE.cast(FloatType()))
+	df = df.withColumn("Duration", df.Duration.cast(IntegerType()))
+	df = df.na.drop()
+
+	data = df.toPandas()
+	mms = MinMaxScaler()
+	mms.fit(data)
+	data_transformed = mms.transform(data)
+	Sum_of_squared_distances = []
+	K = range(1, 15)
+	for k in K:
+		km = KMeans(n_clusters=k)
+		km = KMeans(n_clusters=k)
+		km = km.fit(data_transformed)
+		Sum_of_squared_distances.append(km.inertia_)
+
+	plt.plot(K, Sum_of_squared_distances, 'bx-')
+	plt.xlabel('k')
+	plt.ylabel('Sum_of_squared_distances')
+	plt.title('Elbow Method For Optimal k')
+	plt.show()
+
+
+
+findBestK_2()
+
+#K-means with 'LATITUDE', 'LONGITUDE', "FIRE_SIZE", "Duration"
+
+def kmeans_2():
+	spark = init_spark()
+	df = spark.read.csv('fires.csv', header='true')
+	df = df.withColumn('Duration', (df['CONT_DOY'] - df['DISCOVERY_DOY'] + 1))
+	df = df.select('LATITUDE', 'LONGITUDE', "FIRE_SIZE", "Duration")
+	df = df.withColumn("FIRE_SIZE", df.FIRE_SIZE.cast(IntegerType()))
+	df = df.withColumn("LATITUDE", df.LATITUDE.cast(FloatType()))
+	df = df.withColumn("LONGITUDE", df.LONGITUDE.cast(FloatType()))
+	df = df.withColumn("Duration", df.Duration.cast(IntegerType()))
+	df = df.na.drop()
+	X = df.toPandas()
+	kmeans = KMeans(n_clusters=5, init='k-means++')
+	kmeans.fit(X[X.columns[0:4]])
+	X['cluster_label'] = kmeans.fit_predict(X[X.columns[0:4]])
+	centers = kmeans.cluster_centers_
+	labels = kmeans.predict(X[X.columns[0:4]])
+
+	reduced_data = PCA(n_components=2).fit_transform(X[X.columns[0:4]])
+	results = pd.DataFrame(reduced_data,columns=['pca1','pca2'])
+
+	sns.scatterplot(x="pca1", y="pca2", hue=X['cluster_label'], data=results)
+	plt.title('K-means Clustering with 2 dimensions')
+	plt.show()
+
+
+kmeans_2()
