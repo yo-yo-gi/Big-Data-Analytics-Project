@@ -30,6 +30,11 @@ Our project deals with the ability to predict the occurrence of wildfires based 
  * Prediction of wildfire size based on its attributes.
  * To identify what regions are the most and least prone to wildfires by using clustering.
  * Given the size, location and date, predicting the cause of a fire wildfire.
+ 
+## c. Related Work
+ * Analysis of Machine Learning Methods for Wildfire Security Monitoring with an Unmanned Aerial Vehicles
+ * Machine learning to predict final fire size at the time of ignition-International Journal of Wildland    Fire(https://www.publish.csiro.au/WF/WF19023)-Dmitriy Alexandrov, Elizaveta Pertseva, Ivan Berman, Igor Pantiukhin, Aleksandr Kapitonov 
+ * Data-driven Forest Fire analysis, Jerry Gao, Kshama Shalini, Navit Gaur, Xuan Guan
 
 ## 2. MATERIALS AND METHODS
 ## a. The Dataset ##
@@ -71,7 +76,4 @@ Our work can be extened towards predction techniques for similar natural calamit
 
 In conclusion, we are able to predict some of the aspects that would help in prevention or control of wildfires, using geographcal data and analysis tools/algorithms. 
 
- ## 5. Related Work
- * Analysis of Machine Learning Methods for Wildfire Security Monitoring with an Unmanned Aerial Vehicles
- * Machine learning to predict final fire size at the time of ignition-International Journal of Wildland    Fire(https://www.publish.csiro.au/WF/WF19023)-Dmitriy Alexandrov, Elizaveta Pertseva, Ivan Berman, Igor Pantiukhin, Aleksandr Kapitonov 
- * Data-driven Forest Fire analysis, Jerry Gao, Kshama Shalini, Navit Gaur, Xuan Guan
+ 
