@@ -32,7 +32,7 @@ Our project deals with the ability to predict the occurrence of wildfires based 
  * Given the size, location and date, predicting the cause of a fire wildfire.
  
 ## c. Presentation of the problem to solve
-We selected the dataset which contained different categorical columns, few of which had to be filtered. These columns could be predicted, on the basis of which classifications could be made later. Correlation between the features and considering which features to select based on the correlation value is to be made for data analysis. Next is the selection of an algorithm to create a set of decision trees for classification and clustering to make accurate predictions and arrive upon our results.
+We selected the dataset which contained different categorical columns, few of which had to be filtered to meet our requirements. These columns could be predicted, on the basis of which classifications could be made later. Correlation between the features and considering which features to select based on the correlation value is to be made for data analysis. Next is the selection of an algorithm to create a set of decision trees for classification and clustering to make accurate predictions and arrive upon our results.
  
 ## d. Related Work
  * Analysis of Machine Learning Methods for Wildfire Security Monitoring with an Unmanned Aerial Vehicles
