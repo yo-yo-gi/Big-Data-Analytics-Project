@@ -24,6 +24,8 @@ from sklearn.cluster import KMeans
 import seaborn as sns; sns.set()
 from pyspark.mllib.util import MLUtils
 from pyspark.mllib.evaluation import MulticlassMetrics
+from pyspark.sql.window import Window
+from pyspark.sql.functions import rank, col
 
 
 #Initialize a spark session.
@@ -76,6 +78,8 @@ def preprocessing():
 	
 	#Reading the csv file in spark dataframe
 	df = spark.read.csv('fires.csv', header='true')
+	window = Window.partitionBy(df['OBJECTID']).orderBy(df['STAT_CAUSE_DESCR'].desc())
+	df = df.select('*', rank().over(window).alias('rank')).filter(col('rank') <= 150000)
 	
 	#Taking the columns that are highly correlated between them 
 	df = df.select(df.columns[19:29] + df.columns[30:32] + df.columns[34:36])
@@ -137,8 +141,10 @@ def preprocessing_Fire_cause():
 	
 	#Reading the csv file in spark dataframe
 	df = spark.read.csv('fires.csv', header='true')
+	window = Window.partitionBy(df['OBJECTID']).orderBy(df['STAT_CAUSE_DESCR'].desc())
+	df = df.select('*', rank().over(window).alias('rank')).filter(col('rank') <= 150000)
 	
-	causeSeries = df.groupby(df.STAT_CAUSE_DESCR).count().filter("count >=100000").orderBy('count', ascending=False)
+	causeSeries = df.groupby(df.STAT_CAUSE_DESCR).count().orderBy('count', ascending=False)
 	stat = causeSeries.collect()
 	x= [i for i in range(len(stat))]
 	description = [i[0] for i in stat]
@@ -146,7 +152,6 @@ def preprocessing_Fire_cause():
 	plt.xticks(x, description)
 	plt.savefig('CauseOfFire.png')
 	
-	df = df.filter(~col('STAT_CAUSE_DESCR').isin(description))
 	
 	#Taking the columns that are highly correlated between them 
 	df = df.select(df.columns[19:20] + df.columns[21:22] + df.columns[26:27] + df.columns[23:24] + df.columns[29:32])
@@ -234,24 +239,12 @@ def randomForest_size():
 		
 	#Evaluation of Prediction label 
 	predictions = rfModel.transform(test)
+	evaluator = MulticlassClassificationEvaluator(labelCol="label", predictionCol="prediction", metricName="accuracy")
+	accuracy = evaluator.evaluate(predictions)
+	print("Test Error = %g" % (1.0 - accuracy))
 	
-	
-	# Instantiate metrics object
-	metrics = MulticlassMetrics(pd.dataframe(predictions, test.STAT_CAUSE_CODE))
 
-	# Overall statistics
-	precision = metrics.precision()
-	recall = metrics.recall()
-	f1Score = metrics.fMeasure()
-	print("Summary Stats")
-	print("Precision = %s" % precision)
-	print("Recall = %s" % recall)
-	print("F1 Score = %s" % f1Score)
-	#Calculating the 
-	#evaluator = BinaryClassificationEvaluator()
-	#print("Test Area Under ROC: " + str(evaluator.evaluate(predictions, {evaluator.metricName: "areaUnderROC"})))
-
-randomForest_size()
+#randomForest_size()
 
 
 
