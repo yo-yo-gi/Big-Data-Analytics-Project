@@ -22,6 +22,8 @@ from csv import reader
 from pyspark.sql.functions import isnan, when, count, col, isnull
 from sklearn.cluster import KMeans
 import seaborn as sns; sns.set()
+from pyspark.mllib.util import MLUtils
+from pyspark.mllib.evaluation import MulticlassMetrics
 
 
 #Initialize a spark session.
@@ -217,7 +219,7 @@ def randomForest():
 	accuracy = evaluator.evaluate(predictions)
 	print("Test Error = %g" % (1.0 - accuracy))
 
-randomForest()
+#randomForest()
 
 def randomForest_size():
 	#Preprocessing the data
@@ -229,15 +231,27 @@ def randomForest_size():
 	#using the RandomForestClassifier 
 	rf = RandomForestClassifier(featuresCol = 'features', labelCol = 'label')
 	rfModel = rf.fit(train)
-	
+		
 	#Evaluation of Prediction label 
 	predictions = rfModel.transform(test)
 	
-	#Calculating the 
-	evaluator = BinaryClassificationEvaluator()
-	print("Test Area Under ROC: " + str(evaluator.evaluate(predictions, {evaluator.metricName: "areaUnderROC"})))
+	
+	# Instantiate metrics object
+	metrics = MulticlassMetrics(pd.dataframe(predictions, test.STAT_CAUSE_CODE))
 
-#randomForest_size()
+	# Overall statistics
+	precision = metrics.precision()
+	recall = metrics.recall()
+	f1Score = metrics.fMeasure()
+	print("Summary Stats")
+	print("Precision = %s" % precision)
+	print("Recall = %s" % recall)
+	print("F1 Score = %s" % f1Score)
+	#Calculating the 
+	#evaluator = BinaryClassificationEvaluator()
+	#print("Test Area Under ROC: " + str(evaluator.evaluate(predictions, {evaluator.metricName: "areaUnderROC"})))
+
+randomForest_size()
 
 
 
