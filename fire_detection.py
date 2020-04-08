@@ -204,7 +204,8 @@ def preprocessing_Fire_cause():
 	selectedCols = ['label', 'features'] + cols
 	df = df.select(selectedCols)
 	return df
-	
+
+
 def randomForest():
 	#Preprocessing the data
 	df = preprocessing_Fire_cause()
@@ -224,7 +225,9 @@ def randomForest():
 	accuracy = evaluator.evaluate(predictions)
 	print("Test Error = %g" % (1.0 - accuracy))
 
-#randomForest()
+
+randomForest()
+
 
 def randomForest_size():
 	#Preprocessing the data
@@ -243,24 +246,29 @@ def randomForest_size():
 	accuracy = evaluator.evaluate(predictions)
 	print("Test Error = %g" % (1.0 - accuracy))
 	
-
-#randomForest_size()
-
+randomForest_size()
 
 
 
+# Best K with 'LATITUDE', 'LONGITUDE'
 def findBestK():
 	spark = init_spark()
 	df = spark.read.csv('fires.csv', header='true')
+
+	# Preprocessing the data
 	df = df.select('OBJECTID', 'LATITUDE', 'LONGITUDE')
 	df = df.withColumn("LATITUDE", df["LATITUDE"].cast(FloatType()))
 	df = df.withColumn("LONGITUDE", df["LONGITUDE"].cast(FloatType()))
 	df = df.na.drop()
+
+	# Finding the number of clusters is the elbow method
 	K_clusters = range(3, 10)
 	kmeans = [KMeans(n_clusters=i) for i in K_clusters]
 	X_axis = df.select('LATITUDE').toPandas()
 	Y_axis = df.select('LONGITUDE').toPandas()
 	score = [kmeans[i].fit(X_axis).score(Y_axis) for i in range(len(kmeans))]
+
+	# Visualize k value
 	plt.plot(K_clusters, score)
 	plt.xlabel('Number of Clusters')
 	plt.ylabel('Score')
@@ -268,11 +276,15 @@ def findBestK():
 	plt.show()
 
 
-#findBestK()
+
+findBestK()
 
 
+#Clustering using K-Means ('LATITUDE', 'LONGITUDE') and Assigning Clusters to our Data
 def kmeans():
 	spark = init_spark()
+
+	# Preprocessing the data
 	df = spark.read.csv('fires.csv', header='true')
 	df = df.select('OBJECTID', 'LATITUDE', 'LONGITUDE')
 	df = df.withColumn("LATITUDE", df["LATITUDE"].cast(FloatType()))
@@ -282,6 +294,8 @@ def kmeans():
 	kmeans = KMeans(n_clusters=6, init='k-means++')
 	kmeans.fit(X[X.columns[1:3]])
 	X['cluster_label'] = kmeans.fit_predict(X[X.columns[1:3]])
+
+	# Visualize the Results
 	centers = kmeans.cluster_centers_
 	labels = kmeans.predict(X[X.columns[1:3]])
 	X.plot.scatter(x='LATITUDE', y='LONGITUDE', c=labels, s=50, cmap='viridis')
@@ -296,6 +310,7 @@ def kmeans():
 
 def findBestK_2():
 	spark = init_spark()
+	# Preprocessing the data
 	df = spark.read.csv('fires.csv', header='true')
 	df = df.withColumn('Duration', (df['CONT_DOY'] - df['DISCOVERY_DOY'] + 1))
 	df = df.select('LATITUDE', 'LONGITUDE', "FIRE_SIZE", "Duration")
@@ -304,8 +319,9 @@ def findBestK_2():
 	df = df.withColumn("LONGITUDE", df.LONGITUDE.cast(FloatType()))
 	df = df.withColumn("Duration", df.Duration.cast(IntegerType()))
 	df = df.na.drop()
-
 	data = df.toPandas()
+
+	# Fitting the data for further processing
 	mms = MinMaxScaler()
 	mms.fit(data)
 	data_transformed = mms.transform(data)
@@ -317,6 +333,7 @@ def findBestK_2():
 		km = km.fit(data_transformed)
 		Sum_of_squared_distances.append(km.inertia_)
 
+	# Visualize the Results
 	plt.plot(K, Sum_of_squared_distances, 'bx-')
 	plt.xlabel('k')
 	plt.ylabel('Sum_of_squared_distances')
@@ -331,6 +348,7 @@ def findBestK_2():
 
 def kmeans_2():
 	spark = init_spark()
+	# Preprocessing the data
 	df = spark.read.csv('fires.csv', header='true')
 	df = df.withColumn('Duration', (df['CONT_DOY'] - df['DISCOVERY_DOY'] + 1))
 	df = df.select('LATITUDE', 'LONGITUDE', "FIRE_SIZE", "Duration")
@@ -340,18 +358,21 @@ def kmeans_2():
 	df = df.withColumn("Duration", df.Duration.cast(IntegerType()))
 	df = df.na.drop()
 	X = df.toPandas()
+
 	kmeans = KMeans(n_clusters=5, init='k-means++')
 	kmeans.fit(X[X.columns[0:4]])
 	X['cluster_label'] = kmeans.fit_predict(X[X.columns[0:4]])
 	centers = kmeans.cluster_centers_
 	labels = kmeans.predict(X[X.columns[0:4]])
 
+	# Run PCA on the data and reduce the dimensions in pca_num_components dimensions
 	reduced_data = PCA(n_components=2).fit_transform(X[X.columns[0:4]])
 	results = pd.DataFrame(reduced_data,columns=['pca1','pca2'])
 
+	#Visualize the Results
 	sns.scatterplot(x="pca1", y="pca2", hue=X['cluster_label'], data=results)
 	plt.title('K-means Clustering with 2 dimensions')
 	plt.show()
 
 
-#kmeans_2()
+kmeans_2()
