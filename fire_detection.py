@@ -12,25 +12,16 @@ from pyspark.sql.types import IntegerType, FloatType
 from pyspark.ml.feature import OneHotEncoderEstimator, StringIndexer, VectorAssembler
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import RandomForestClassifier
-from pyspark.ml.evaluation import BinaryClassificationEvaluator
+from pyspark.ml.evaluation import BinaryClassificationEvaluator,MulticlassClassificationEvaluator
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-# Dask imports
-
 import dask.bag as db
 import dask.dataframe as df  # you can use Dask bags or dataframes
 from csv import reader
 from pyspark.sql.functions import isnan, when, count, col, isnull
-
-# Kmeans imports
-
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 import seaborn as sns; sns.set()
-import csv
 
 
 #Initialize a spark session.
@@ -42,6 +33,16 @@ def init_spark():
         .config("spark.some.config.option", "some-value") \
         .getOrCreate()
     return spark
+
+def plot_corr(df,size=10):
+	corr = df.corr()
+	fig, ax = plt.subplots(figsize=(size, size))
+	ax.matshow(corr,cmap=plt.cm.Oranges)
+	plt.xticks(range(len(corr.columns)), corr.columns)
+	plt.yticks(range(len(corr.columns)), corr.columns)
+	for tick in ax.get_xticklabels():
+		tick.set_rotation(45)    
+	plt.show()	
 
 	
 def corelationVariables(feature_correlation):
@@ -129,7 +130,96 @@ def preprocessing():
 	df = df.select(selectedCols)
 	return df
 	
-def decisionTree():
+def preprocessing_Fire_cause():
+	spark = init_spark()
+	
+	#Reading the csv file in spark dataframe
+	df = spark.read.csv('fires.csv', header='true')
+	
+	causeSeries = df.groupby(df.STAT_CAUSE_DESCR).count().filter("count >=100000").orderBy('count', ascending=False)
+	stat = causeSeries.collect()
+	x= [i for i in range(len(stat))]
+	description = [i[0] for i in stat]
+	plt.bar(x, [i[1] for i in stat], alpha=0.5)
+	plt.xticks(x, description)
+	plt.savefig('CauseOfFire.png')
+	
+	df = df.filter(~col('STAT_CAUSE_DESCR').isin(description))
+	
+	#Taking the columns that are highly correlated between them 
+	df = df.select(df.columns[19:20] + df.columns[21:22] + df.columns[26:27] + df.columns[23:24] + df.columns[29:32])
+	
+	#Drop the null and na values from dataset
+	df = df.na.drop()
+	
+		
+	#Converting all to respective types from String DataType
+	df = df.withColumn('Duration', ( df['CONT_DOY'] - df['DISCOVERY_DOY'] +1 ) )
+	df = df.withColumn("STAT_CAUSE_CODE", df.STAT_CAUSE_CODE.cast(IntegerType()))
+	df = df.withColumn("FIRE_YEAR", df.FIRE_YEAR.cast(IntegerType()))
+	df = df.withColumn("LATITUDE", df.LATITUDE.cast(FloatType()))
+	df = df.withColumn("LONGITUDE", df.LONGITUDE.cast(FloatType()))
+	df = df.withColumn("Duration", df.Duration.cast(IntegerType()))
+	categorical_Columns = ['FIRE_SIZE_CLASS']
+	total_indexFeatures = []
+	
+	#Converting the Categororical variable from category to one hot encoding 
+	for categ_col in categorical_Columns:
+		catIndex = StringIndexer(inputCol = categ_col, outputCol = categ_col + 'Index')
+		catEn = OneHotEncoderEstimator(inputCols=[catIndex.getOutputCol()], outputCols=[categ_col + "classVec"])
+		total_indexFeatures += [catIndex, catEn]
+		
+	#Creating the Correlation Imgae between the features and saving	
+	numeric_data = df.select('LATITUDE','LONGITUDE','STAT_CAUSE_CODE', 'FIRE_YEAR','Duration').toPandas()
+	corelationVariables(numeric_data)
+
+	cols = df.columns
+	
+	#Target variable that needs to be predicted 
+	label = StringIndexer(inputCol = 'STAT_CAUSE_CODE', outputCol = 'label').setHandleInvalid("keep")
+	total_indexFeatures += [label]
+	
+	#Extracting the continuos features in the dataset 
+	continuous_features = ['LATITUDE','LONGITUDE']
+	
+	#combining continuos and category variables
+	totalFeatures = [c + "classVec" for c in categorical_Columns] + continuous_features
+	tFeatures = VectorAssembler(inputCols=totalFeatures, outputCol="features")
+	total_indexFeatures += [tFeatures]
+	
+	#Creating the pipeling for the transform 
+	pipeline = Pipeline(stages = total_indexFeatures)
+	df = df.na.drop()
+	pipelineModel = pipeline.fit(df)
+	df = pipelineModel.transform(df)
+	
+	#Only selected columns are used from the dataset
+	selectedCols = ['label', 'features'] + cols
+	df = df.select(selectedCols)
+	return df
+	
+def randomForest():
+	#Preprocessing the data
+	df = preprocessing_Fire_cause()
+	
+	#Spliting the data from training and test set with some seed
+	train, test = df.randomSplit([0.8, 0.2], seed = 2018)
+	
+	#using the RandomForestClassifier 
+	rf = RandomForestClassifier(featuresCol = 'features', labelCol = 'label', numTrees=20)
+	rfModel = rf.fit(train)
+	
+	#Evaluation of Prediction label 
+	predictions = rfModel.transform(test)
+	
+	#Calculating the 
+	evaluator = MulticlassClassificationEvaluator(labelCol="label", predictionCol="prediction", metricName="accuracy")
+	accuracy = evaluator.evaluate(predictions)
+	print("Test Error = %g" % (1.0 - accuracy))
+
+randomForest()
+
+def randomForest_size():
 	#Preprocessing the data
 	df = preprocessing()
 	
@@ -147,7 +237,9 @@ def decisionTree():
 	evaluator = BinaryClassificationEvaluator()
 	print("Test Area Under ROC: " + str(evaluator.evaluate(predictions, {evaluator.metricName: "areaUnderROC"})))
 
-decisionTree()
+#randomForest_size()
+
+
 
 
 def findBestK():
@@ -169,7 +261,7 @@ def findBestK():
 	plt.show()
 
 
-findBestK()
+#findBestK()
 
 
 def kmeans():
@@ -189,9 +281,7 @@ def kmeans():
 	plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
 	plt.show()
 
-
-
-kmeans()
+#kmeans()
 
 
 
@@ -228,7 +318,7 @@ def findBestK_2():
 
 
 
-findBestK_2()
+#findBestK_2()
 
 #K-means with 'LATITUDE', 'LONGITUDE', "FIRE_SIZE", "Duration"
 
@@ -257,4 +347,4 @@ def kmeans_2():
 	plt.show()
 
 
-kmeans_2()
+#kmeans_2()
