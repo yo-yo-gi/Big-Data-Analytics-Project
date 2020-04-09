@@ -29,7 +29,6 @@ from pyspark.sql.functions import rank, col
 
 
 #Initialize a spark session.
-
 def init_spark():
     spark = SparkSession \
         .builder \
@@ -37,6 +36,9 @@ def init_spark():
         .config("spark.some.config.option", "some-value") \
         .getOrCreate()
     return spark
+
+
+
 
 def plot_corr(df,size=10):
 	corr = df.corr()
@@ -73,20 +75,20 @@ def corelationVariables(feature_correlation):
 	#Saving the image of the correlation matrix
 	plt.savefig('correlation.png')
 	
-def preprocessing():
-	spark = init_spark()
-	
-	#Reading the csv file in spark dataframe
-	df = spark.read.csv('fires.csv', header='true')
-	window = Window.partitionBy(df['OBJECTID']).orderBy(df['STAT_CAUSE_DESCR'].desc())
+def under_sample(df):
+	window = Window.partitionBy(df['OBJECTID']).orderBy(df['STAT_CAUSE_CODE'].desc())
 	df = df.select('*', rank().over(window).alias('rank')).filter(col('rank') <= 150000)
+	return df
 	
+def preprocessing(sp_df):
+	df = sp_df
+	df = under_sample(df)
 	#Taking the columns that are highly correlated between them 
 	df = df.select(df.columns[19:29] + df.columns[30:32] + df.columns[34:36])
 	
 	#Drop the null and na values from dataset
 	df = df.na.drop()
-	
+
 	#Using the Duration day and containment day calculating the Creating Duration feature
 	df = df.withColumn('Duration', ( df['CONT_DOY'] - df['DISCOVERY_DOY'] +1 ) )
 	df = df.drop("FIRE_YEAR","DISCOVERY_DATE","DISCOVERY_DOY","DISCOVERY_TIME","CONT_DATE",'CONT_TIME','STAT_CAUSE_DESCR','CONT_DAY','CONT_DOY')
@@ -136,13 +138,9 @@ def preprocessing():
 	df = df.select(selectedCols)
 	return df
 	
-def preprocessing_Fire_cause():
-	spark = init_spark()
-	
-	#Reading the csv file in spark dataframe
-	df = spark.read.csv('fires.csv', header='true')
-	window = Window.partitionBy(df['OBJECTID']).orderBy(df['STAT_CAUSE_DESCR'].desc())
-	df = df.select('*', rank().over(window).alias('rank')).filter(col('rank') <= 150000)
+def preprocessing_Fire_cause(sp_df):
+	df = sp_df
+	df = under_sample(df)
 	
 	causeSeries = df.groupby(df.STAT_CAUSE_DESCR).count().orderBy('count', ascending=False)
 	stat = causeSeries.collect()
@@ -206,9 +204,9 @@ def preprocessing_Fire_cause():
 	return df
 
 
-def randomForest():
+def randomForest(sp_df):
 	#Preprocessing the data
-	df = preprocessing_Fire_cause()
+	df = preprocessing_Fire_cause(sp_df)
 	
 	#Spliting the data from training and test set with some seed
 	train, test = df.randomSplit([0.8, 0.2], seed = 2018)
@@ -226,12 +224,12 @@ def randomForest():
 	print("Test Error = %g" % (1.0 - accuracy))
 
 
-randomForest()
 
 
-def randomForest_size():
+
+def randomForest_size(sp_df):
 	#Preprocessing the data
-	df = preprocessing()
+	df = preprocessing(sp_df)
 	
 	#Spliting the data from training and test set with some seed
 	train, test = df.randomSplit([0.8, 0.2], seed = 2018)
@@ -246,14 +244,13 @@ def randomForest_size():
 	accuracy = evaluator.evaluate(predictions)
 	print("Test Error = %g" % (1.0 - accuracy))
 	
-randomForest_size()
+
 
 
 
 # Best K with 'LATITUDE', 'LONGITUDE'
-def findBestK():
-	spark = init_spark()
-	df = spark.read.csv('fires.csv', header='true')
+def findBestK(sp_df):
+	df = sp_df
 
 	# Preprocessing the data
 	df = df.select('OBJECTID', 'LATITUDE', 'LONGITUDE')
@@ -277,15 +274,12 @@ def findBestK():
 
 
 
-findBestK()
+#findBestK()
 
 
 #Clustering using K-Means ('LATITUDE', 'LONGITUDE') and Assigning Clusters to our Data
-def kmeans():
-	spark = init_spark()
-
-	# Preprocessing the data
-	df = spark.read.csv('fires.csv', header='true')
+def kmeans(sp_df):
+	df = sp_df
 	df = df.select('OBJECTID', 'LATITUDE', 'LONGITUDE')
 	df = df.withColumn("LATITUDE", df["LATITUDE"].cast(FloatType()))
 	df = df.withColumn("LONGITUDE", df["LONGITUDE"].cast(FloatType()))
@@ -308,10 +302,9 @@ def kmeans():
 
 # Best K with 'LATITUDE', 'LONGITUDE', "FIRE_SIZE", "Duration"
 
-def findBestK_2():
-	spark = init_spark()
+def findBestK_2(sp_df):
+	df = sp_df
 	# Preprocessing the data
-	df = spark.read.csv('fires.csv', header='true')
 	df = df.withColumn('Duration', (df['CONT_DOY'] - df['DISCOVERY_DOY'] + 1))
 	df = df.select('LATITUDE', 'LONGITUDE', "FIRE_SIZE", "Duration")
 	df = df.withColumn("FIRE_SIZE", df.FIRE_SIZE.cast(IntegerType()))
@@ -346,10 +339,9 @@ def findBestK_2():
 
 #K-means with 'LATITUDE', 'LONGITUDE', "FIRE_SIZE", "Duration"
 
-def kmeans_2():
-	spark = init_spark()
+def kmeans_2(sp_df):
+	df = sp_df
 	# Preprocessing the data
-	df = spark.read.csv('fires.csv', header='true')
 	df = df.withColumn('Duration', (df['CONT_DOY'] - df['DISCOVERY_DOY'] + 1))
 	df = df.select('LATITUDE', 'LONGITUDE', "FIRE_SIZE", "Duration")
 	df = df.withColumn("FIRE_SIZE", df.FIRE_SIZE.cast(IntegerType()))
@@ -374,5 +366,11 @@ def kmeans_2():
 	plt.title('K-means Clustering with 2 dimensions')
 	plt.show()
 
-
-kmeans_2()
+if __name__ == "__main__":
+	spark = init_spark()
+	#Reading the csv file in spark dataframe
+	sp_df = spark.read.csv('fires.csv', header='true')
+	randomForest_size(sp_df)
+	#randomForest(sp_df)
+	#kmeans(sp_df)
+	#kmeans_2(sp_df)
