@@ -81,7 +81,15 @@ Using the above mentioned tools and algorithms, we are able to obtain the follow
 
 Some of the results are shown below :
 
+![](Images/dataset.PNG)
+
 ![](Images/classification%20set.PNG)
+
+![](Images/seature%20selection.PNG)
+
+![](Images/k.PNG)
+
+![](Images/clustering.PNG)
 
 ## 4. DISCUSSION
 The solution is relevant to the problem as this explains about the the prediction techniques to find out occurrance of wildfire with respect to the other features, by using this solution the wildfires could be avoided in the future. This would help people who are living in the surrounding regions become more cautious and take preventive measures that can reduce the damage.The solution also has many other advantages and can be applied to various natural disasters.
