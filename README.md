@@ -1,22 +1,8 @@
-# Big Data Analytics SOEN 691-UU / SOEN 499-UU
+# Big Data Analytics
 # Project Proposal
 - - - -
 # Category - Dataset analysis
 # Dataset: USA WildFires [https://www.kaggle.com/rtatman/188-million-us-wildfires]
-
-- - - -
-Team Details:
-
-
-
-|   Name  |          Student Id         | 
-|:------------------:|:---------------------------------:|
-| Yogesh Nimbhorkar        | 40093384            |
-| Darshan Dhananjay | 40079241          |
-| Sourabh Rajeev Badagandi | 40098471 | 
-| Arvind Korchibettu Adiga | 40105178                |
-
-- - - -
 
 
 
